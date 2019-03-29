@@ -8,6 +8,9 @@ using LoggingSample_DAL.Context;
 
 namespace LoggingSample_BLL.Services
 {
+    using System.Collections.Generic;
+    using System.Linq;
+
     public class CustomerService : IDisposable
     {
         private readonly AppDbContext _context = new AppDbContext();
@@ -26,6 +29,18 @@ namespace LoggingSample_BLL.Services
 
                 return customer?.Map();
             });
+        }
+
+        public Task<List<CustomerModel>> GetCustomers()
+        {
+            return this._context.Customers.ToListAsync().ContinueWith(
+                t =>
+                    {
+                        var customers = t.Result.Select(c => c?.Map()).ToList();
+
+                        return customers;
+                    });
+
         }
 
         public void Dispose()

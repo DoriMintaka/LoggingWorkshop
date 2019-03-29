@@ -12,6 +12,8 @@ using NLog;
 
 namespace LoggingSample.Controllers
 {
+    using System.Collections.Generic;
+
     [RoutePrefix("api/customers")]
     public class CustomersController : ApiController
     {
@@ -22,9 +24,21 @@ namespace LoggingSample.Controllers
         [Route("")]
         public async Task<IHttpActionResult> Get()
         {
-            var customers = (await _context.Customers.ToListAsync()).Select(item => item.Map()).Select(InitCustomer);
+            Logger.Info("Start getting all customers.");
+            try
+            {
+                var customers = (await this._customerService.GetCustomers()).Select(c => InitCustomer(c));
 
-            return Ok(customers);
+                Logger.Info("Retrieving customers.");
+
+                return Ok(customers);
+            }
+            catch (Exception e)
+            {
+                Logger.Error(e, "Some error occured while getting customers.");
+                throw;
+            }
+            
         }
 
         [Route("{customerId}", Name = "Customer")]
@@ -67,7 +81,7 @@ namespace LoggingSample.Controllers
         {
             return new
             {
-                _self = new UrlHelper(Request).Link("Customer", new {customerId = model.Id}),
+                _self = new UrlHelper(Request).Link("Customer", new { customerId = model.Id }),
                 orders = new UrlHelper(Request).Link("Orders", new { customerId = model.Id }),
                 data = model
             };
